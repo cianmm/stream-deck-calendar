@@ -1,3 +1,5 @@
 node_modules/
 *.log
 com.cianmm.calendar.sdPlugin/bin/
+helper/.build/
+com.cianmm.calendar.sdPlugin/bin/calendar-helper
