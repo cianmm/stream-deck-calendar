@@ -5,7 +5,8 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "rollup -c",
+    "build": "./scripts/build-helper.sh && rollup -c",
+    "build:helper": "./scripts/build-helper.sh",
     "watch": "rollup -c -w",
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
