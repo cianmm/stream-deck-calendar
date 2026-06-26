@@ -3,12 +3,12 @@ import { computeRenderModel } from "../src/calendar/state";
 import type { HelperResult, Meeting } from "../src/calendar/types";
 
 const at = (iso: string) => new Date(iso);
-const meeting = (start: string, end: string): HelperResult => ({
+const meeting = (start: Date, end: Date): HelperResult => ({
   kind: "meeting",
   meeting: {
     title: "Design review",
-    start: at(start),
-    end: at(end),
+    start,
+    end,
     url: "https://example.com/join",
     calendarId: "cal-1",
   } satisfies Meeting,
@@ -23,7 +23,10 @@ describe("computeRenderModel", () => {
   });
 
   it("countdown more than 2 min before start", () => {
-    const m = computeRenderModel(meeting("2026-06-26T10:25:00Z", "2026-06-26T10:55:00Z"), at("2026-06-26T10:00:00Z"));
+    const start = new Date(2026, 5, 26, 10, 25);
+    const end = new Date(2026, 5, 26, 10, 55);
+    const now = new Date(2026, 5, 26, 10, 0);
+    const m = computeRenderModel(meeting(start, end), now);
     expect(m.state).toBe("countdown");
     expect(m.badge).toBe("IN 25");
     expect(m.timeRange).toBe("10:25–10:55");
@@ -33,12 +36,18 @@ describe("computeRenderModel", () => {
   });
 
   it("countdown rounds minutes up", () => {
-    const m = computeRenderModel(meeting("2026-06-26T10:24:30Z", "2026-06-26T10:55:00Z"), at("2026-06-26T10:00:00Z"));
+    const start = new Date(2026, 5, 26, 10, 24, 30);
+    const end = new Date(2026, 5, 26, 10, 55, 0);
+    const now = new Date(2026, 5, 26, 10, 0, 0);
+    const m = computeRenderModel(meeting(start, end), now);
     expect(m.badge).toBe("IN 25");
   });
 
   it("join-window opens exactly 2 minutes before start", () => {
-    const m = computeRenderModel(meeting("2026-06-26T10:02:00Z", "2026-06-26T10:30:00Z"), at("2026-06-26T10:00:00Z"));
+    const start = new Date(2026, 5, 26, 10, 2, 0);
+    const end = new Date(2026, 5, 26, 10, 30, 0);
+    const now = new Date(2026, 5, 26, 10, 0, 0);
+    const m = computeRenderModel(meeting(start, end), now);
     expect(m.state).toBe("join-window");
     expect(m.badge).toBe("JOIN · 2m");
     expect(m.barColor).toBe("#3ec46d");
@@ -46,27 +55,35 @@ describe("computeRenderModel", () => {
   });
 
   it("still countdown one second before the window opens", () => {
-    const m = computeRenderModel(meeting("2026-06-26T10:02:01Z", "2026-06-26T10:30:00Z"), at("2026-06-26T10:00:00Z"));
+    const start = new Date(2026, 5, 26, 10, 2, 1);
+    const end = new Date(2026, 5, 26, 10, 30, 0);
+    const now = new Date(2026, 5, 26, 10, 0, 0);
+    const m = computeRenderModel(meeting(start, end), now);
     expect(m.state).toBe("countdown");
     expect(m.pressAction).toBe("none");
   });
 
   it("live from start through end inclusive", () => {
-    const live = meeting("2026-06-26T10:00:00Z", "2026-06-26T10:30:00Z");
-    const atStart = computeRenderModel(live, at("2026-06-26T10:00:00Z"));
+    const start = new Date(2026, 5, 26, 10, 0, 0);
+    const end = new Date(2026, 5, 26, 10, 30, 0);
+    const live = meeting(start, end);
+    const atStart = computeRenderModel(live, start);
     expect(atStart.state).toBe("live");
     expect(atStart.badge).toBe("NOW");
     expect(atStart.barColor).toBe("#ff5a5f");
     expect(atStart.keyBg).toBe("#3a1417");
     expect(atStart.pressAction).toBe("open-link");
 
-    const atEnd = computeRenderModel(live, at("2026-06-26T10:30:00Z"));
+    const atEnd = computeRenderModel(live, end);
     expect(atEnd.state).toBe("live");
     expect(atEnd.pressAction).toBe("open-link");
   });
 
   it("idle once the meeting has ended", () => {
-    const m = computeRenderModel(meeting("2026-06-26T09:00:00Z", "2026-06-26T09:30:00Z"), at("2026-06-26T09:30:01Z"));
+    const start = new Date(2026, 5, 26, 9, 0, 0);
+    const end = new Date(2026, 5, 26, 9, 30, 0);
+    const now = new Date(2026, 5, 26, 9, 30, 1);
+    const m = computeRenderModel(meeting(start, end), now);
     expect(m.state).toBe("idle");
     expect(m.pressAction).toBe("none");
   });

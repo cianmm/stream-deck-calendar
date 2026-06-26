@@ -31,7 +31,7 @@ function pad(n: number): string {
 }
 
 function formatTime(d: Date): string {
-  return `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 function minutesUntil(target: Date, now: Date): number {
