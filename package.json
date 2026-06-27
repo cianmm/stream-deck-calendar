@@ -10,14 +10,18 @@
     "watch": "rollup -c -w",
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "reload": "rollup -c && streamdeck restart com.cianmm.calendar",
+    "reload:all": "npm run build && streamdeck restart com.cianmm.calendar",
+    "dev": "rollup -c -w"
   },
-  "author": "Cian Mac Mahon",
+  "author": "cianmm",
   "license": "UNLICENSED",
   "dependencies": {
     "@elgato/streamdeck": "^2.1.0"
   },
   "devDependencies": {
+    "@elgato/cli": "^1.7.4",
     "@rollup/plugin-commonjs": "^28.0.6",
     "@rollup/plugin-node-resolve": "^16.0.3",
     "@rollup/plugin-typescript": "^12.1.4",

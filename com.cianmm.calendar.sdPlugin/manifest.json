@@ -1,7 +1,7 @@
 {
   "Name": "Calendar",
   "Version": "1.0.0.0",
-  "Author": "Cian Mac Mahon",
+  "Author": "cianmm",
   "UUID": "com.cianmm.calendar",
   "Description": "Shows your next meeting and joins it from a single key.",
   "Category": "Calendar",
