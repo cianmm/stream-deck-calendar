@@ -32,8 +32,9 @@ BIN_PATHS=()
 
 for ARCH in "${ARCHES[@]}"; do
     echo "Building calendar-helper for $ARCH..."
-    if "$SWIFT_BIN" build -c release --build-system native --arch "$ARCH"; then
-        BIN_PATHS+=("$("$SWIFT_BIN" build -c release --build-system native --arch "$ARCH" --show-bin-path)/calendar-helper")
+    BUILD_FLAGS=(-c release --build-system native --arch "$ARCH")
+    if "$SWIFT_BIN" build "${BUILD_FLAGS[@]}"; then
+        BIN_PATHS+=("$("$SWIFT_BIN" build "${BUILD_FLAGS[@]}" --show-bin-path)/calendar-helper")
     else
         echo "warning: build for $ARCH failed (likely no $ARCH Swift runtime/SDK available on this host without full Xcode); skipping that slice." >&2
     fi

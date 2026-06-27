@@ -10,7 +10,7 @@ import streamDeck, {
   type SendToPluginEvent,
 } from "@elgato/streamdeck";
 
-import { computeRenderModel } from "../calendar/state";
+import { computeRenderModel, renderModelsEqual, type RenderModel } from "../calendar/state";
 import { renderKeySvg } from "../calendar/render";
 import { getNextMeeting, listCalendars } from "../calendar/helper-client";
 import type { HelperResult } from "../calendar/types";
@@ -31,13 +31,13 @@ type KeyAction = { setImage: (image: string) => Promise<void> };
 export class NextMeetingAction extends SingletonAction<NextMeetingSettings> {
   private cached: HelperResult = { kind: "none" };
   private calendarIds: string[] = [];
-  private currentAction: KeyAction | null = null;
+  private current: { action: KeyAction; lastModel: RenderModel | null } | null = null;
   private pollTimer: ReturnType<typeof setInterval> | null = null;
   private tickTimer: ReturnType<typeof setInterval> | null = null;
   private polling = false;
 
   override async onWillAppear(ev: WillAppearEvent<NextMeetingSettings>): Promise<void> {
-    this.currentAction = ev.action as unknown as KeyAction;
+    this.current = { action: ev.action as unknown as KeyAction, lastModel: null };
     this.calendarIds = ev.payload.settings.calendarIds ?? [];
     await this.poll();
     this.render();
@@ -50,7 +50,7 @@ export class NextMeetingAction extends SingletonAction<NextMeetingSettings> {
     if (this.tickTimer) clearInterval(this.tickTimer);
     this.pollTimer = null;
     this.tickTimer = null;
-    this.currentAction = null;
+    this.current = null;
   }
 
   override async onDidReceiveSettings(ev: DidReceiveSettingsEvent<NextMeetingSettings>): Promise<void> {
@@ -83,9 +83,10 @@ export class NextMeetingAction extends SingletonAction<NextMeetingSettings> {
   }
 
   private async poll(): Promise<void> {
-    // Single-flight: a helper launch can block (e.g. waiting on a first-run
-    // permission prompt). Without this guard the 60s timer stacks a new
-    // launch — and a new prompt — on every tick while one is pending.
+    // Single-flight across all callers of poll() (the timer, onWillAppear,
+    // onDidReceiveSettings): a helper launch can block (e.g. waiting on a
+    // first-run permission prompt). Without this guard a concurrent caller
+    // stacks a new launch — and a new prompt — on top of one already pending.
     if (this.polling) return;
     this.polling = true;
     try {
@@ -99,8 +100,10 @@ export class NextMeetingAction extends SingletonAction<NextMeetingSettings> {
   }
 
   private render(): void {
-    if (!this.currentAction) return;
+    if (!this.current) return;
     const model = computeRenderModel(this.cached, new Date());
-    void this.currentAction.setImage(`data:image/svg+xml,${encodeURIComponent(renderKeySvg(model))}`);
+    if (this.current.lastModel && renderModelsEqual(model, this.current.lastModel)) return;
+    this.current.lastModel = model;
+    void this.current.action.setImage(`data:image/svg+xml,${encodeURIComponent(renderKeySvg(model))}`);
   }
 }

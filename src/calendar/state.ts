@@ -52,6 +52,10 @@ function formatCountdown(start: Date, now: Date): string {
   return `IN ${Math.round(ms / DAY)}d`;
 }
 
+export function renderModelsEqual(a: RenderModel, b: RenderModel): boolean {
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
 export function computeRenderModel(result: HelperResult, now: Date): RenderModel {
   if (result.kind === "permission_denied") {
     return {

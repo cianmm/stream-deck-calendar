@@ -7,21 +7,6 @@ import type { HelperResult } from "./types";
 export type ExecResult = { stdout: string; stderr: string; code: number };
 export type ExecFn = (file: string, args: string[]) => Promise<ExecResult>;
 
-// Run a bare executable directly and capture its stdout. Used for a plain
-// binary path (local/Terminal debugging) and as the path tests exercise.
-const execFileExec: ExecFn = (file, args) =>
-  new Promise((resolve) => {
-    execFile(file, args, { maxBuffer: 1024 * 1024 }, (err, stdout, stderr) => {
-      const code =
-        err && typeof (err as NodeJS.ErrnoException).code === "number"
-          ? ((err as NodeJS.ErrnoException).code as unknown as number)
-          : err
-            ? 1
-            : 0;
-      resolve({ stdout: stdout?.toString() ?? "", stderr: stderr?.toString() ?? "", code });
-    });
-  });
-
 // Launch a .app bundle via `open` so macOS attaches the Calendar grant to the
 // app's bundle id. `open` does not relay the child's stdout, so we pass an
 // `--out <file>` the helper writes its JSON to, wait for the app to exit
@@ -61,9 +46,6 @@ const openAppExec: ExecFn = (appPath, args) =>
     );
   });
 
-const defaultExec: ExecFn = (file, args) =>
-  file.endsWith(".app") ? openAppExec(file, args) : execFileExec(file, args);
-
 // The helper signals failure with a JSON object carrying an `error` field.
 // We key on that content (not the process exit code), because when launched
 // via `open` the caller never sees the helper's exit code.
@@ -78,7 +60,7 @@ function errorField(value: unknown): string | undefined {
 export async function getNextMeeting(
   binaryPath: string,
   calendarIds: string[],
-  exec: ExecFn = defaultExec,
+  exec: ExecFn = openAppExec,
 ): Promise<HelperResult> {
   const { stdout } = await exec(binaryPath, ["next-meeting", "--calendars", ...calendarIds]);
   const trimmed = stdout.trim();
@@ -111,7 +93,7 @@ export async function getNextMeeting(
 
 export async function listCalendars(
   binaryPath: string,
-  exec: ExecFn = defaultExec,
+  exec: ExecFn = openAppExec,
 ): Promise<{ id: string; title: string }[]> {
   const { stdout } = await exec(binaryPath, ["list-calendars"]);
   const trimmed = stdout.trim();
