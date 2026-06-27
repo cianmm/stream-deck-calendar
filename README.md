@@ -19,13 +19,13 @@ Calendar app, via a small bundled helper.
 
 ## What the key looks like
 
-| State | Looks like | Press |
-|------|-----------|-------|
-| No upcoming meeting with a link | grey, "No meetings" | nothing |
-| More than 2 min away | amber bar, `IN 25m` / `IN 3h` / `IN 2d` | nothing |
-| Within 2 min of start | green bar, `JOIN · 1m` | opens the link |
-| Meeting in progress | red key, `NOW` | opens the link |
-| Calendar access not granted | red key, `ACCESS` | opens Calendar privacy settings |
+| State | Key | Looks like | Press |
+|------|-----|-----------|-------|
+| No upcoming meeting with a link | <img src="docs/images/key-idle.svg" width="64" height="64"> | grey, "No meetings" | nothing |
+| More than 2 min away | <img src="docs/images/key-countdown.svg" width="64" height="64"> | amber bar, `IN 25m` / `IN 3h` / `IN 2d` | nothing |
+| Within 2 min of start | <img src="docs/images/key-join-window.svg" width="64" height="64"> | green bar, `JOIN · 1m` | opens the link |
+| Meeting in progress | <img src="docs/images/key-live.svg" width="64" height="64"> | red key, `NOW` | opens the link |
+| Calendar access not granted | <img src="docs/images/key-access-error.svg" width="64" height="64"> | red key, `ACCESS` | opens Calendar privacy settings |
 
 ## Requirements
 
