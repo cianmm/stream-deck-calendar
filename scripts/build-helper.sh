@@ -56,3 +56,19 @@ fi
 
 chmod +x "$DEST_DIR/calendar-helper"
 echo "Copied helper to $DEST_DIR/calendar-helper"
+
+# Wrap the binary in a .app bundle. macOS attaches a Calendar (TCC) grant to
+# the *responsible app*; a bare CLI binary spawned by Stream Deck's background
+# Node becomes its own responsible process with no UI, so tccd silently denies
+# it and never shows a prompt. Packaged as an app with a stable bundle id
+# (com.cianmm.calendar.helper), the user grants Calendar access to the app once
+# and every subsequent launch — including the plugin's background `open` calls —
+# inherits the grant by bundle id.
+APP_DIR="$DEST_DIR/CalendarHelper.app"
+rm -rf "$APP_DIR"
+mkdir -p "$APP_DIR/Contents/MacOS"
+cp "$DEST_DIR/calendar-helper" "$APP_DIR/Contents/MacOS/calendar-helper"
+cp "$HELPER_DIR/AppInfo.plist" "$APP_DIR/Contents/Info.plist"
+# Ad-hoc sign so the bundle has a stable code identity for TCC.
+codesign --force -s - "$APP_DIR"
+echo "Assembled $APP_DIR"
