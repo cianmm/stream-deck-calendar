@@ -28,7 +28,7 @@ describe("computeRenderModel", () => {
     const now = new Date(2026, 5, 26, 10, 0);
     const m = computeRenderModel(meeting(start, end), now);
     expect(m.state).toBe("countdown");
-    expect(m.badge).toBe("IN 25");
+    expect(m.badge).toBe("IN 25m");
     expect(m.timeRange).toBe("10:25–10:55");
     expect(m.title).toBe("Design review");
     expect(m.barColor).toBe("#e0a13a");
@@ -40,7 +40,31 @@ describe("computeRenderModel", () => {
     const end = new Date(2026, 5, 26, 10, 55, 0);
     const now = new Date(2026, 5, 26, 10, 0, 0);
     const m = computeRenderModel(meeting(start, end), now);
-    expect(m.badge).toBe("IN 25");
+    expect(m.badge).toBe("IN 25m");
+  });
+
+  it("countdown shows minutes up to and including 90 minutes", () => {
+    const start = new Date(2026, 5, 26, 11, 30);
+    const end = new Date(2026, 5, 26, 12, 0);
+    const now = new Date(2026, 5, 26, 10, 0);
+    const m = computeRenderModel(meeting(start, end), now);
+    expect(m.badge).toBe("IN 90m");
+  });
+
+  it("countdown shows hours between 90 minutes and a day", () => {
+    const start = new Date(2026, 5, 26, 13, 0); // 3h away
+    const end = new Date(2026, 5, 26, 13, 30);
+    const now = new Date(2026, 5, 26, 10, 0);
+    const m = computeRenderModel(meeting(start, end), now);
+    expect(m.badge).toBe("IN 3h");
+  });
+
+  it("countdown shows days beyond 24 hours", () => {
+    const start = new Date(2026, 5, 28, 14, 45); // ~2 days away
+    const end = new Date(2026, 5, 28, 15, 15);
+    const now = new Date(2026, 5, 26, 14, 45);
+    const m = computeRenderModel(meeting(start, end), now);
+    expect(m.badge).toBe("IN 2d");
   });
 
   it("join-window opens exactly 2 minutes before start", () => {

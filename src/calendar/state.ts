@@ -38,6 +38,20 @@ function minutesUntil(target: Date, now: Date): number {
   return Math.ceil((target.getTime() - now.getTime()) / 60000);
 }
 
+const MINUTE = 60_000;
+const HOUR = 60 * MINUTE;
+const DAY = 24 * HOUR;
+
+// Countdown label that scales its unit to the distance: minutes up to 90 min,
+// then hours up to a day, then days. Keeps the badge readable for far-off
+// meetings (e.g. "IN 2d" instead of "IN 2978").
+function formatCountdown(start: Date, now: Date): string {
+  const ms = start.getTime() - now.getTime();
+  if (ms <= 90 * MINUTE) return `IN ${Math.ceil(ms / MINUTE)}m`;
+  if (ms <= DAY) return `IN ${Math.round(ms / HOUR)}h`;
+  return `IN ${Math.round(ms / DAY)}d`;
+}
+
 export function computeRenderModel(result: HelperResult, now: Date): RenderModel {
   if (result.kind === "permission_denied") {
     return {
@@ -75,7 +89,7 @@ export function computeRenderModel(result: HelperResult, now: Date): RenderModel
   if (nowMs < startMs - JOIN_LEAD_MS) {
     return {
       state: "countdown",
-      badge: `IN ${minutesUntil(meeting.start, now)}`,
+      badge: formatCountdown(meeting.start, now),
       timeRange,
       title: meeting.title,
       barColor: COLORS.countdownBar,
