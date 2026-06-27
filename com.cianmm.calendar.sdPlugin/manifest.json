@@ -1,0 +1,26 @@
+{
+  "Name": "Calendar",
+  "Version": "1.0.0.0",
+  "Author": "cianmm",
+  "UUID": "com.cianmm.calendar",
+  "Description": "Shows your next meeting and joins it from a single key.",
+  "Category": "Calendar",
+  "Icon": "imgs/plugin/marketplace",
+  "CategoryIcon": "imgs/plugin/category-icon",
+  "CodePath": "bin/plugin.js",
+  "SDKVersion": 2,
+  "Software": { "MinimumVersion": "6.5" },
+  "Nodejs": { "Version": "20", "Debug": "enabled" },
+  "OS": [{ "Platform": "mac", "MinimumVersion": "12" }],
+  "Actions": [
+    {
+      "Name": "Next Meeting",
+      "UUID": "com.cianmm.calendar.next-meeting",
+      "Icon": "imgs/actions/next-meeting/icon",
+      "Tooltip": "Shows your next meeting and opens its link.",
+      "Controllers": ["Keypad"],
+      "PropertyInspectorPath": "ui/inspector.html",
+      "States": [{ "Image": "imgs/actions/next-meeting/key", "TitleAlignment": "middle" }]
+    }
+  ]
+}
