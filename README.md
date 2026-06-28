@@ -5,14 +5,18 @@ your next meeting on a key and opens its join link with one press.
 
 - **Shows your next meeting** — title, time range, and a countdown that scales
   itself (`IN 25m` → `IN 3h` → `IN 2d`).
-- **One-press join** — from **2 minutes before** the meeting starts through its
-  end, pressing the key opens the meeting link. Outside that window a press does
-  nothing.
+- **One-press join** — from a **configurable lead time** (default 2 minutes)
+  before the meeting starts through its end, pressing the key opens the meeting
+  link. Outside that window a press does nothing.
 - **Finds the link anywhere** — uses the event's URL field, then its location,
   then its notes, recognising Google Meet, Zoom, Teams, FaceTime, Webex, Whereby,
   Jitsi, GoTo, BlueJeans, Chime, Skype, Discord, RingCentral and 8x8 (and falling
-  back to the first link it finds).
-- **Pick which calendars to watch** in the button's settings.
+  back to the first link it finds). All-day events are skipped, even if they have
+  a link in their notes.
+- **Warns about back-to-back meetings** — if the next meeting starts the moment
+  this one ends, the live key shows an amber stripe so you know to wrap up.
+- **Pick which calendars to watch, and the join lead time**, in the button's
+  settings.
 
 It reads your calendar through Apple's EventKit, the same source as the macOS
 Calendar app, via a small bundled helper.
@@ -25,6 +29,7 @@ Calendar app, via a small bundled helper.
 | More than 2 min away | <img src="docs/images/key-countdown.svg" width="64" height="64"> | amber bar, `IN 25m` / `IN 3h` / `IN 2d` | nothing |
 | Within 2 min of start | <img src="docs/images/key-join-window.svg" width="64" height="64"> | green bar, `JOIN · 1m` | opens the link |
 | Meeting in progress | <img src="docs/images/key-live.svg" width="64" height="64"> | red key, `NOW` | opens the link |
+| Meeting in progress, next one is back-to-back | <img src="docs/images/key-live-backtoback.svg" width="64" height="64"> | red key, `NOW`, amber stripe on the right edge | opens the link |
 | Calendar access not granted | <img src="docs/images/key-access-error.svg" width="64" height="64"> | red key, `ACCESS` | opens Calendar privacy settings |
 
 ## Requirements
@@ -82,8 +87,9 @@ Then in the Stream Deck app:
 
 1. Find **Next Meeting** under the **Calendar** category (or search for it) and
    drag it onto a key.
-2. With the key selected, open its **settings** (the panel at the bottom) and
-   **tick the calendars** you want it to watch.
+2. With the key selected, open its **settings** (the panel at the bottom),
+   **tick the calendars** you want it to watch, and optionally change the
+   **join lead time** (default 2 minutes).
 
 The key will now show your next meeting that has a join link, or "No meetings" if
 there are none in the next 30 days.
@@ -94,9 +100,13 @@ there are none in the next 30 days.
   and has a join link, and shows that.
 - A "join link" is taken from the event's **URL field** first, then its
   **location**, then its **notes** — preferring a known video-conferencing host,
-  otherwise the first link found. Events with no detectable link are skipped.
-- The join window is **`start − 2 min` through `end`**, inclusive. Press the key
-  in that window to open the link.
+  otherwise the first link found. Events with no detectable link, and all-day
+  events, are skipped.
+- The join window is **`start − lead time` through `end`**, inclusive, where lead
+  time defaults to 2 minutes and is configurable in settings. Press the key in
+  that window to open the link.
+- If the meeting right after this one starts with no gap, the live key shows an
+  amber stripe on its right edge as a heads-up.
 
 ## Development
 

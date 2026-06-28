@@ -141,21 +141,24 @@ case "next-meeting":
     let now = Date()
     let until = Calendar.current.date(byAdding: .day, value: 30, to: now)!
     let predicate = store.predicateForEvents(withStart: now, end: until, calendars: chosen)
-    let next = store.events(matching: predicate)
-        .filter { $0.endDate > now && resolveMeetingURL($0) != nil }
+    let candidates = store.events(matching: predicate)
+        .filter { !$0.isAllDay && $0.endDate > now && resolveMeetingURL($0) != nil }
         .sorted { $0.startDate < $1.startDate }
-        .first
 
-    guard let event = next, let url = resolveMeetingURL(event) else {
+    guard let event = candidates.first, let url = resolveMeetingURL(event) else {
         emitString("null")
         exit(0)
     }
+    // No gap before the meeting that follows this one: worth a heads-up so the
+    // user knows to wrap up instead of finding out when this one's badge flips.
+    let backToBack = candidates.count > 1 && candidates[1].startDate <= event.endDate
     emitJSON([
         "title": event.title ?? "(no title)",
         "startISO": iso.string(from: event.startDate),
         "endISO": iso.string(from: event.endDate),
         "url": url,
         "calendarId": event.calendar.calendarIdentifier,
+        "backToBack": backToBack,
     ])
 
 default:

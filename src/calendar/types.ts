@@ -4,6 +4,7 @@ export interface Meeting {
   end: Date;
   url: string;
   calendarId: string;
+  backToBack: boolean;
 }
 
 export type HelperResult =

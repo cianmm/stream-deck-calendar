@@ -57,4 +57,14 @@ describe("renderKeySvg", () => {
     });
     expect(svg).toContain("No meetings");
   });
+
+  it("draws a right-edge warning stripe when warningBar is set", () => {
+    const svg = renderKeySvg({ ...base, warningBar: "#e0a13a" });
+    expect(svg).toContain('x="67" y="0" width="5" height="72" fill="#e0a13a"');
+  });
+
+  it("omits the warning stripe when warningBar is unset", () => {
+    const svg = renderKeySvg(base);
+    expect(svg).not.toContain('x="67"');
+  });
 });

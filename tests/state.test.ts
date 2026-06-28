@@ -3,7 +3,7 @@ import { computeRenderModel } from "../src/calendar/state";
 import type { HelperResult, Meeting } from "../src/calendar/types";
 
 const at = (iso: string) => new Date(iso);
-const meeting = (start: Date, end: Date): HelperResult => ({
+const meeting = (start: Date, end: Date, backToBack = false): HelperResult => ({
   kind: "meeting",
   meeting: {
     title: "Design review",
@@ -11,6 +11,7 @@ const meeting = (start: Date, end: Date): HelperResult => ({
     end,
     url: "https://example.com/join",
     calendarId: "cal-1",
+    backToBack,
   } satisfies Meeting,
 });
 
@@ -101,6 +102,30 @@ describe("computeRenderModel", () => {
     const atEnd = computeRenderModel(live, end);
     expect(atEnd.state).toBe("live");
     expect(atEnd.pressAction).toBe("open-link");
+  });
+
+  it("live shows a warning bar when the next meeting is back-to-back", () => {
+    const start = new Date(2026, 5, 26, 10, 0, 0);
+    const end = new Date(2026, 5, 26, 10, 30, 0);
+    const m = computeRenderModel(meeting(start, end, true), start);
+    expect(m.state).toBe("live");
+    expect(m.warningBar).toBeTruthy();
+  });
+
+  it("live has no warning bar when nothing follows immediately", () => {
+    const start = new Date(2026, 5, 26, 10, 0, 0);
+    const end = new Date(2026, 5, 26, 10, 30, 0);
+    const m = computeRenderModel(meeting(start, end, false), start);
+    expect(m.warningBar).toBeUndefined();
+  });
+
+  it("respects a custom join-lead time", () => {
+    const start = new Date(2026, 5, 26, 10, 10, 0);
+    const end = new Date(2026, 5, 26, 10, 40, 0);
+    const now = new Date(2026, 5, 26, 10, 0, 0);
+    const tenMinuteLead = 10 * 60_000;
+    expect(computeRenderModel(meeting(start, end), now, tenMinuteLead).state).toBe("join-window");
+    expect(computeRenderModel(meeting(start, end), now).state).toBe("countdown");
   });
 
   it("idle once the meeting has ended", () => {

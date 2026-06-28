@@ -18,6 +18,7 @@ const liveResult: HelperResult = {
     end: new Date(Date.now() + 600_000),
     url: "https://meet.example/live",
     calendarId: "cal-1",
+    backToBack: false,
   },
 };
 
