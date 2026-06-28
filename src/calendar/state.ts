@@ -12,9 +12,11 @@ export interface RenderModel {
   barColor: string;
   keyBg: string;
   pressAction: PressAction;
+  warningBar?: string;
 }
 
-const JOIN_LEAD_MS = 2 * 60 * 1000;
+export const DEFAULT_JOIN_LEAD_MINUTES = 2;
+const JOIN_LEAD_MS = DEFAULT_JOIN_LEAD_MINUTES * 60 * 1000;
 
 const COLORS = {
   idleBar: "#3a3a3d",
@@ -56,7 +58,11 @@ export function renderModelsEqual(a: RenderModel, b: RenderModel): boolean {
   return JSON.stringify(a) === JSON.stringify(b);
 }
 
-export function computeRenderModel(result: HelperResult, now: Date): RenderModel {
+export function computeRenderModel(
+  result: HelperResult,
+  now: Date,
+  joinLeadMs: number = JOIN_LEAD_MS,
+): RenderModel {
   if (result.kind === "permission_denied") {
     return {
       state: "access-error",
@@ -90,7 +96,7 @@ export function computeRenderModel(result: HelperResult, now: Date): RenderModel
   const startMs = meeting.start.getTime();
   const nowMs = now.getTime();
 
-  if (nowMs < startMs - JOIN_LEAD_MS) {
+  if (nowMs < startMs - joinLeadMs) {
     return {
       state: "countdown",
       badge: formatCountdown(meeting.start, now),
@@ -122,5 +128,6 @@ export function computeRenderModel(result: HelperResult, now: Date): RenderModel
     barColor: COLORS.liveBar,
     keyBg: COLORS.keyLive,
     pressAction: "open-link",
+    warningBar: meeting.backToBack ? COLORS.countdownBar : undefined,
   };
 }

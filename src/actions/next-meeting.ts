@@ -10,13 +10,14 @@ import streamDeck, {
   type SendToPluginEvent,
 } from "@elgato/streamdeck";
 
-import { computeRenderModel, renderModelsEqual, type RenderModel } from "../calendar/state";
+import { computeRenderModel, renderModelsEqual, DEFAULT_JOIN_LEAD_MINUTES, type RenderModel } from "../calendar/state";
 import { renderKeySvg } from "../calendar/render";
 import { getNextMeeting, listCalendars } from "../calendar/helper-client";
 import type { HelperResult } from "../calendar/types";
 
 export type NextMeetingSettings = {
   calendarIds?: string[];
+  joinLeadMinutes?: number;
 };
 
 const POLL_MS = 60_000;
@@ -25,12 +26,18 @@ const SETTINGS_URL = "x-apple.systempreferences:com.apple.preference.security?Pr
 
 const HELPER_PATH = join(dirname(fileURLToPath(import.meta.url)), "CalendarHelper.app");
 
+function resolveJoinLeadMs(settings: NextMeetingSettings): number {
+  const minutes = Number(settings.joinLeadMinutes);
+  return (Number.isFinite(minutes) && minutes >= 0 ? minutes : DEFAULT_JOIN_LEAD_MINUTES) * 60_000;
+}
+
 type KeyAction = { setImage: (image: string) => Promise<void> };
 
 @action({ UUID: "com.cianmm.calendar.next-meeting" })
 export class NextMeetingAction extends SingletonAction<NextMeetingSettings> {
   private cached: HelperResult = { kind: "none" };
   private calendarIds: string[] = [];
+  private joinLeadMs = DEFAULT_JOIN_LEAD_MINUTES * 60_000;
   private current: { action: KeyAction; lastModel: RenderModel | null } | null = null;
   private pollTimer: ReturnType<typeof setInterval> | null = null;
   private tickTimer: ReturnType<typeof setInterval> | null = null;
@@ -39,6 +46,7 @@ export class NextMeetingAction extends SingletonAction<NextMeetingSettings> {
   override async onWillAppear(ev: WillAppearEvent<NextMeetingSettings>): Promise<void> {
     this.current = { action: ev.action as unknown as KeyAction, lastModel: null };
     this.calendarIds = ev.payload.settings.calendarIds ?? [];
+    this.joinLeadMs = resolveJoinLeadMs(ev.payload.settings);
     await this.poll();
     this.render();
     this.pollTimer ??= setInterval(() => void this.poll(), POLL_MS);
@@ -55,13 +63,14 @@ export class NextMeetingAction extends SingletonAction<NextMeetingSettings> {
 
   override async onDidReceiveSettings(ev: DidReceiveSettingsEvent<NextMeetingSettings>): Promise<void> {
     this.calendarIds = ev.payload.settings.calendarIds ?? [];
+    this.joinLeadMs = resolveJoinLeadMs(ev.payload.settings);
     await this.poll();
     this.render();
   }
 
   override async onKeyDown(ev: KeyDownEvent<NextMeetingSettings>): Promise<void> {
     void ev;
-    const model = computeRenderModel(this.cached, new Date());
+    const model = computeRenderModel(this.cached, new Date(), this.joinLeadMs);
     if (model.pressAction === "open-link" && this.cached.kind === "meeting") {
       await streamDeck.system.openUrl(this.cached.meeting.url);
     } else if (model.pressAction === "open-settings") {
@@ -101,7 +110,7 @@ export class NextMeetingAction extends SingletonAction<NextMeetingSettings> {
 
   private render(): void {
     if (!this.current) return;
-    const model = computeRenderModel(this.cached, new Date());
+    const model = computeRenderModel(this.cached, new Date(), this.joinLeadMs);
     if (this.current.lastModel && renderModelsEqual(model, this.current.lastModel)) return;
     this.current.lastModel = model;
     void this.current.action.setImage(`data:image/svg+xml,${encodeURIComponent(renderKeySvg(model))}`);

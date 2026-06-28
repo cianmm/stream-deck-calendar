@@ -18,6 +18,21 @@ describe("getNextMeeting", () => {
     expect(r.meeting.title).toBe("Standup");
     expect(r.meeting.start.toISOString()).toBe("2026-06-26T10:00:00.000Z");
     expect(r.meeting.url).toBe("https://meet.example/abc");
+    expect(r.meeting.backToBack).toBe(false);
+  });
+
+  it("parses backToBack when the helper reports it", async () => {
+    const json = JSON.stringify({
+      title: "Standup",
+      startISO: "2026-06-26T10:00:00Z",
+      endISO: "2026-06-26T10:15:00Z",
+      url: "https://meet.example/abc",
+      calendarId: "cal-1",
+      backToBack: true,
+    });
+    const r = await getNextMeeting("/bin/helper", ["cal-1"], exec(json));
+    if (r.kind !== "meeting") throw new Error("expected meeting");
+    expect(r.meeting.backToBack).toBe(true);
   });
 
   it("returns none for literal null", async () => {

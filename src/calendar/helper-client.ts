@@ -78,7 +78,14 @@ export async function getNextMeeting(
     return err === "permission_denied" ? { kind: "permission_denied" } : { kind: "error", message: err };
   }
 
-  const meeting = raw as { title: string; startISO: string; endISO: string; url: string; calendarId: string };
+  const meeting = raw as {
+    title: string;
+    startISO: string;
+    endISO: string;
+    url: string;
+    calendarId: string;
+    backToBack?: boolean;
+  };
   return {
     kind: "meeting",
     meeting: {
@@ -87,6 +94,7 @@ export async function getNextMeeting(
       end: new Date(meeting.endISO),
       url: meeting.url,
       calendarId: meeting.calendarId,
+      backToBack: Boolean(meeting.backToBack),
     },
   };
 }
